@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ben's Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f0f;--surface:#181818;--surface2:#222;--border:#2a2a2a;
+  --text:#f0ede8;--muted:#777;--accent:#d4a853;--accent2:#7c9e7a;--accent3:#5a86b8;
+  --r:10px;
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+#app{max-width:980px;margin:0 auto;padding:24px 20px 60px}
+.header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+.greeting{font-family:'DM Serif Display',serif;font-size:25px;line-height:1.2}
+.greeting em{font-style:italic;color:var(--accent)}
+.date-line{font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:0.03em}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.progress-pill{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:0}
+.tab{padding:8px 16px;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;font-family:'DM Sans',sans-serif;background:none;border-top:none;border-left:none;border-right:none}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.panel{display:none}.panel.active{display:block}
+.tasks-layout{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
+@media(max-width:680px){.tasks-layout{grid-template-columns:1fr}}
+.day-nav{display:flex;gap:5px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px}
+.day-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap;transition:all 0.15s;font-family:'DM Sans',sans-serif}
+.day-btn:hover{border-color:#444;color:var(--text)}
+.day-btn.active{background:var(--accent);border-color:var(--accent);color:#0f0f0f;font-weight:600}
+.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px}
+.stat-val{font-family:'DM Serif Display',serif;font-size:20px;color:var(--text)}
+.stat-label{font-size:11px;color:var(--muted);margin-top:1px}
+.prog-bar{height:3px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden}
+.prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width 0.4s}
+.section{margin-bottom:7px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;background:var(--surface);transition:background 0.15s;user-select:none}
+.section-header:hover{background:var(--surface2)}
+.section-title-row{display:flex;align-items:center;gap:8px}
+.stag{font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:2px 7px;border-radius:4px}
+.stag.morning{background:#1a1a12;color:#c4a84a}
+.stag.afternoon{background:#121a1a;color:#5a9e7a}
+.stag.evening{background:#1a1218;color:#b06080}
+.section-name{font-size:13px;font-weight:500}
+.section-meta{display:flex;align-items:center;gap:8px}
+.section-count{font-size:11px;color:var(--muted)}
+.chevron{font-size:11px;color:var(--muted);transition:transform 0.2s}
+.chevron.open{transform:rotate(180deg)}
+.section-body{background:var(--surface);border-top:1px solid var(--border);padding:4px 0;display:none}
+.section-body.open{display:block}
+.task{display:flex;align-items:flex-start;gap:9px;padding:7px 14px;cursor:pointer;transition:background 0.12s}
+.task:hover{background:var(--surface2)}
+.chk{width:14px;height:14px;border:1.5px solid var(--border);border-radius:3px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.chk.on{background:var(--accent);border-color:var(--accent)}
+.chk.on::after{content:'✓';font-size:9px;color:#0f0f0f;font-weight:700}
+.task-text{font-size:13px;line-height:1.5;flex:1}
+.task-text.on{color:var(--muted);text-decoration:line-through;text-decoration-color:#3a3a3a}
+.subtasks{margin:0 14px 6px 37px;border-left:1px solid var(--border)}
+.subtask{display:flex;align-items:flex-start;gap:7px;padding:5px 10px;cursor:pointer}
+.subtask:hover .st-text{color:var(--text)}
+.schk{width:11px;height:11px;border:1.5px solid #333;border-radius:3px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.schk.on{background:var(--accent2);border-color:var(--accent2)}
+.schk.on::after{content:'✓';font-size:7px;color:#0f0f0f;font-weight:700}
+.st-text{font-size:12px;color:var(--muted);line-height:1.5}
+.st-text.on{text-decoration:line-through;text-decoration-color:#333}
+.cal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;position:sticky;top:16px}
+.card-label{padding:11px 14px;font-size:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
+.cal-dot{width:7px;height:7px;border-radius:50%;background:#4285F4;display:inline-block}
+.cal-frame-wrap iframe{width:100%;height:420px;border:none;display:block;filter:invert(1) hue-rotate(180deg) brightness(0.82) saturate(1.1)}
+.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:600px){.kanban{grid-template-columns:1fr}}
+.kan-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.kan-col-hdr{padding:12px 14px;font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.kan-badge{font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 7px;color:var(--muted)}
+.kan-body{padding:10px;display:flex;flex-direction:column;gap:7px;min-height:80px}
+.kan-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text);line-height:1.4}
+.kan-card-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.kan-empty{font-size:12px;color:#3a3a3a;text-align:center;padding:16px 0}
+.notes-layout{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:600px){.notes-layout{grid-template-columns:1fr}}
+.notes-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.notes-body{padding:14px}
+.notes-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.note-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:7px;font-size:13px;color:var(--text);line-height:1.4}
+.note-del{background:none;border:none;color:#3a3a3a;cursor:pointer;font-size:16px;padding:0 2px;flex-shrink:0;transition:color 0.15s;line-height:1}
+.note-del:hover{color:#c0604a}
+.note-input-row{display:flex;gap:8px}
+.note-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.15s}
+.note-input:focus{border-color:var(--accent)}
+.note-input::placeholder{color:#3a3a3a}
+.note-add-btn{background:var(--accent);border:none;border-radius:8px;padding:8px 14px;font-size:13px;color:#0f0f0f;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity 0.15s}
+.note-add-btn:hover{opacity:0.85}
+.parking-list{display:flex;flex-direction:column;gap:6px}
+.parking-item{padding:8px 10px;background:var(--surface2);border-radius:7px;font-size:13px;color:var(--text);border-left:3px solid var(--accent3)}
+.state-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:32px 20px;text-align:center;color:var(--muted);font-size:13px}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.footer{text-align:center;margin-top:24px;font-size:11px;color:#333;letter-spacing:0.04em}
+.footer a{color:#444;text-decoration:none}
+</style>
+</head>
+<body>
+<div id="app"><div id="root"><div class="state-card"><div class="spinner"></div>Loading your dashboard…</div></div></div>
+<script>
+const DAY_PAGES={
+  0:{name:'Sunday',  url:'https://www.notion.so/20ffd4563f6b80f69849d1bcb2a694e4'},
+  1:{name:'Monday',  url:'https://www.notion.so/20bfd4563f6b8074be1bd01db62408bd'},
+  2:{name:'Tuesday', url:'https://www.notion.so/20efd4563f6b80b39558e63ff11dbd84'},
+  3:{name:'Wednesday',url:'https://www.notion.so/237fd4563f6b80cebad7e5d075c5a65c'},
+  4:{name:'Thursday',url:'https://www.notion.so/237fd4563f6b80b2aa3be614c1b946f7'},
+  5:{name:'Friday',  url:'https://www.notion.so/20ffd4563f6b80c9bfc4fcbbb31f63bf'},
+  6:{name:'Saturday',url:'https://www.notion.so/20ffd4563f6b80ebabb2d51ff861330e'},
+};
+const DAYS_ORDER=[1,2,3,4,5,6,0];
+const CAL_URL='https://calendar.google.com/calendar/embed?src=zeffertandgoldtraining%40gmail.com&ctz=America%2FNew_York&mode=WEEK&showTitle=0&showNav=1&showPrint=0&showTabs=0&showCalendars=0&showTz=0';
+const PROJECTS_URL='https://www.notion.so/bccfd4563f6b828ba94d0181625dfb11';
+const PARKING_URL='https://www.notion.so/237fd4563f6b809080e5e62bde1741a0';
+const ANTHROPIC_API='https://api.anthropic.com/v1/messages';
+const MODEL='claude-sonnet-4-20250514';
+
+let currentDay=new Date().getDay();
+let activeTab='tasks';
+let state={
+  tasks:{sections:[],checked:new Set(),subtaskChecked:new Set(),loading:true},
+  projects:{items:[],loading:true},
+  notes:{quickNotes:[],parking:[],loading:true,input:''}
+};
+
+function getGreeting(){const h=new Date().getHours();return h<12?'Good morning':h<17?'Good afternoon':'Good evening'}
+function formatDate(d){return d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})}
+function getSTag(n){n=n.toLowerCase();if(n.includes('morning')||n.includes('8am'))return'morning';if(n.includes('afternoon')||n.includes('12pm'))return'afternoon';if(n.includes('evening'))return'evening';return''}
+function countTasks(){let t=0,d=0;state.tasks.sections.forEach(s=>(s.tasks||[]).forEach(tk=>{if(tk.type==='group')return;t++;if(state.tasks.checked.has(tk.id))d++;(tk.subtasks||[]).forEach(st=>{t++;if(state.tasks.subtaskChecked.has(st.id))d++;});}));return{total:t,done:d}}
+
+async function callClaude(systemPrompt,userMsg){
+  const res=await fetch(ANTHROPIC_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,max_tokens:4000,system:systemPrompt,messages:[{role:'user',content:userMsg}],mcp_servers:[{type:'url',url:'https://mcp.notion.com/mcp',name:'notion'}]})});
+  const data=await res.json();
+  return(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+}
+
+async function loadTasks(dayIndex){
+  state.tasks.loading=true;state.tasks.sections=[];
+  if(activeTab==='tasks')render();
+  const info=DAY_PAGES[dayIndex];
+  try{
+    const text=await callClaude(
+      `You are a Notion MCP assistant. Fetch the Notion page and return ALL its checkbox tasks as a JSON array.
+Format: [{"name":"SECTION","tasks":[{"id":"uid1","text":"task text","done":false,"subtasks":[{"id":"uid2","text":"subtask","done":false}]}]}]
+Group by section/summary headers. done=true if [x]. Clean markdown. Short random IDs. Return ONLY valid JSON array.`,
+      `Fetch this Notion page and extract all checkbox tasks as JSON:\n${info.url}`
+    );
+    let sections=[];
+    try{const m=text.match(/\[[\s\S]*\]/);if(m)sections=JSON.parse(m[0]);}catch(e){}
+    state.tasks.sections=sections;state.tasks.loading=false;
+    sections.forEach(s=>(s.tasks||[]).forEach(t=>{
+      if(t.done)state.tasks.checked.add(t.id);
+      (t.subtasks||[]).forEach(st=>{if(st.done)state.tasks.subtaskChecked.add(st.id);});
+    }));
+  }catch(e){state.tasks.loading=false;}
+  if(activeTab==='tasks')render();
+}
+
+async function loadProjects(){
+  state.projects.loading=true;
+  if(activeTab==='projects')render();
+  try{
+    const text=await callClaude(
+      `You are a Notion MCP assistant. Fetch the Notion database and return all projects as JSON.
+Format: [{"name":"Project Name","status":"Not started|In progress|Done","tasks":"3 remaining"}]
+status must be exactly one of: "Not started","In progress","Done".
+Return ONLY a valid JSON array, no markdown, no explanation.`,
+      `Fetch this Notion database and return all projects as JSON:\n${PROJECTS_URL}`
+    );
+    let items=[];
+    try{const m=text.match(/\[[\s\S]*\]/);if(m)items=JSON.parse(m[0]);}catch(e){}
+    state.projects.items=items;state.projects.loading=false;
+  }catch(e){state.projects.loading=false;}
+  if(activeTab==='projects')render();
+}
+
+async function loadNotes(){
+  state.notes.loading=true;
+  if(activeTab==='notes')render();
+  try{
+    const text=await callClaude(
+      `You are a Notion MCP assistant. Fetch the Notion page and return its text content as a JSON array of strings (one per non-empty line/bullet).
+Format: ["item 1","item 2"]
+Return ONLY a valid JSON array, no markdown, no explanation.`,
+      `Fetch this Notion page and return its content lines as JSON:\n${PARKING_URL}`
+    );
+    let items=[];
+    try{const m=text.match(/\[[\s\S]*\]/);if(m)items=JSON.parse(m[0]);}catch(e){}
+    state.notes.parking=items;state.notes.loading=false;
+  }catch(e){state.notes.loading=false;}
+  if(activeTab==='notes')render();
+}
+
+function switchTab(tab){activeTab=tab;if(tab==='projects'&&state.projects.loading)loadProjects();if(tab==='notes'&&state.notes.loading)loadNotes();render()}
+function switchDay(d){currentDay=d;state.tasks.checked=new Set();state.tasks.subtaskChecked=new Set();loadTasks(d);}
+function toggleTask(id){state.tasks.checked.has(id)?state.tasks.checked.delete(id):state.tasks.checked.add(id);render()}
+function toggleSub(id){state.tasks.subtaskChecked.has(id)?state.tasks.subtaskChecked.delete(id):state.tasks.subtaskChecked.add(id);render()}
+function toggleSection(i){state.tasks.sections[i].open=!state.tasks.sections[i].open;render()}
+function addNote(){const v=state.notes.input.trim();if(!v)return;state.notes.quickNotes.unshift(v);state.notes.input='';render();setTimeout(()=>{const el=document.getElementById('note-input');if(el)el.focus();},50)}
+function deleteNote(i){state.notes.quickNotes.splice(i,1);render()}
+function noteKey(e){if(e.key==='Enter')addNote()}
+function noteChange(v){state.notes.input=v}
+
+function renderTasksPanel(){
+  const{total,done}=countTasks();const pct=total?Math.round(done/total*100):0;
+  const nav=DAYS_ORDER.map(d=>`<button class="day-btn${d===currentDay?' active':''}" onclick="switchDay(${d})">${DAY_PAGES[d].name.slice(0,3)}</button>`).join('');
+  const stats=`<div class="stats-bar"><div class="stat"><div class="stat-val">${total}</div><div class="stat-label">Total</div></div><div class="stat"><div class="stat-val">${done}</div><div class="stat-label">Done</div></div><div class="stat"><div class="stat-val">${pct}%</div><div class="stat-label">Progress<div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div></div></div></div>`;
+  let secs='';
+  if(state.tasks.loading){secs=`<div class="state-card"><div class="spinner"></div>Loading ${DAY_PAGES[currentDay].name}…</div>`;}
+  else if(!state.tasks.sections.length){secs=`<div class="state-card">No tasks found.</div>`;}
+  else{
+    state.tasks.sections.forEach((sec,si)=>{
+      const tag=getSTag(sec.name);const tks=(sec.tasks||[]).filter(t=>t.type!=='group');const dn=tks.filter(t=>state.tasks.checked.has(t.id)).length;
+      let th='';
+      (sec.tasks||[]).forEach(t=>{
+        if(t.type==='group'){th+=`<div style="padding:7px 14px 2px;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:#444;font-weight:600">${t.name}</div>`;return;}
+        const ck=state.tasks.checked.has(t.id);
+        let sub='';
+        if(t.subtasks&&t.subtasks.length)sub=`<div class="subtasks">${t.subtasks.map(st=>{const sc=state.tasks.subtaskChecked.has(st.id);return`<div class="subtask" onclick="toggleSub('${st.id}');event.stopPropagation()"><div class="schk${sc?' on':''}"></div><div class="st-text${sc?' on':''}">${st.text}</div></div>`;}).join('')}</div>`;
+        th+=`<div class="task" onclick="toggleTask('${t.id}')"><div class="chk${ck?' on':''}"></div><div class="task-text${ck?' on':''}">${t.text}</div></div>${sub}`;
+      });
+      secs+=`<div class="section"><div class="section-header" onclick="toggleSection(${si})"><div class="section-title-row">${tag?`<span class="stag ${tag}">${tag}</span>`:''}<span class="section-name">${sec.name}</span></div><div class="section-meta"><span class="section-count">${dn}/${tks.length}</span><span class="chevron${sec.open?' open':''}">▾</span></div></div><div class="section-body${sec.open?' open':''}">${th}</div></div>`;
+    });
+  }
+  return`<div class="tasks-layout"><div><div class="day-nav">${nav}</div>${stats}${secs}</div><div class="cal-card"><div class="card-label"><span class="cal-dot"></span>Google Calendar</div><div class="cal-frame-wrap"><iframe src="${CAL_URL}" scrolling="no" frameborder="0" title="Google Calendar"></iframe></div></div></div>`;
+}
+
+function renderProjectsPanel(){
+  if(state.projects.loading)return`<div class="state-card"><div class="spinner"></div>Loading your Projects from Notion…</div>`;
+  if(!state.projects.items.length)return`<div class="state-card">No projects found.</div>`;
+  const groups={'Not started':[],'In progress':[],'Done':[]};
+  state.projects.items.forEach(p=>{(groups[p.status]||groups['Not started']).push(p);});
+  const cols=[{key:'Not started',label:'Not Started',color:'#888'},{key:'In progress',label:'In Progress',color:'var(--accent3)'},{key:'Done',label:'Done',color:'var(--accent2)'}];
+  const kanban=cols.map(c=>{const items=groups[c.key]||[];const cards=items.length?items.map(p=>`<div class="kan-card">${p.name}${p.tasks?`<div class="kan-card-sub">${p.tasks}</div>`:''}</div>`).join(''):`<div class="kan-empty">—</div>`;return`<div class="kan-col"><div class="kan-col-hdr"><span style="width:8px;height:8px;border-radius:50%;background:${c.color};display:inline-block;flex-shrink:0"></span>${c.label}<span class="kan-badge">${items.length}</span></div><div class="kan-body">${cards}</div></div>`;}).join('');
+  return`<div class="kanban">${kanban}</div>`;
+}
+
+function renderNotesPanel(){
+  if(state.notes.loading)return`<div class="state-card"><div class="spinner"></div>Loading your Parking Lot from Notion…</div>`;
+  const quickItems=state.notes.quickNotes.map((n,i)=>`<div class="note-item"><span style="flex:1">${n}</span><button class="note-del" onclick="deleteNote(${i})">×</button></div>`).join('');
+  const parkItems=state.notes.parking.map(p=>`<div class="parking-item">${p}</div>`).join('')||`<div style="font-size:12px;color:#3a3a3a;padding:8px 0">No items in Parking Lot.</div>`;
+  return`<div class="notes-layout"><div class="notes-card"><div class="card-label">✏️ &nbsp;Quick Capture</div><div class="notes-body"><div class="notes-list">${quickItems||'<div style="font-size:12px;color:#3a3a3a;padding:4px 0">Add a thought below…</div>'}</div><div class="note-input-row"><input id="note-input" class="note-input" placeholder="Capture a thought…" value="${state.notes.input.replace(/"/g,'&quot;')}" oninput="noteChange(this.value)" onkeydown="noteKey(event)"><button class="note-add-btn" onclick="addNote()">Add</button></div></div></div><div class="notes-card"><div class="card-label">🅿️ &nbsp;Parking Lot</div><div class="notes-body"><div class="parking-list">${parkItems}</div></div></div></div>`;
+}
+
+function render(){
+  const root=document.getElementById('root');
+  const{total,done}=countTasks();
+  const tabs=[{id:'tasks',label:'📋 Tasks'},{id:'projects',label:'🗂 Projects'},{id:'notes',label:'📝 Notes'}];
+  const tabNav=tabs.map(t=>`<button class="tab${activeTab===t.id?' active':''}" onclick="switchTab('${t.id}')">${t.label}</button>`).join('');
+  let panelHTML='';
+  if(activeTab==='tasks')panelHTML=renderTasksPanel();
+  else if(activeTab==='projects')panelHTML=renderProjectsPanel();
+  else if(activeTab==='notes')panelHTML=renderNotesPanel();
+  root.innerHTML=`
+    <div class="header">
+      <div><div class="greeting">${getGreeting()}, <em>Ben.</em></div><div class="date-line">${formatDate(new Date())}</div></div>
+      <div class="hdr-right"><div class="progress-pill"><div class="dot"></div>${done}/${total} tasks done</div></div>
+    </div>
+    <div class="tabs">${tabNav}</div>
+    <div class="panel active">${panelHTML}</div>
+    <div class="footer">Connected to <a href="https://notion.so" target="_blank">Notion</a> · <a href="https://calendar.google.com" target="_blank">Google Calendar</a></div>`;
+}
+
+render();
+loadTasks(currentDay);
+</script>
+</body>
+</html>
